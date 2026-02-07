@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceReplica</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <!-- Main Container -->
+  <div class="container">
+    
+    <!-- Header Section -->
+    <header class="header">
+      <h1 class="app-name">VoiceReplica</h1>
+      <p class="app-subtitle">Your AI Voice Assistant</p>
+    </header>
+
+    <!-- Microphone Control Area -->
+    <section class="mic-control">
+      <button class="mic-button" id="micButton" aria-label="Start listening">
+        <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+      </button>
+      <p class="mic-label">Click to Start</p>
+    </section>
+
+    <!-- Status Section -->
+    <section class="status-section">
+      <div class="status-card">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text" id="statusText">Ready</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transcript Section -->
+    <section class="transcript-section">
+      <div class="section-card">
+        <h2 class="section-title">
+          <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Your Message
+        </h2>
+        <div class="content-area" id="transcriptArea">
+          <p class="placeholder-text">Your voice transcript will appear here...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Response Section -->
+    <section class="response-section">
+      <div class="section-card">
+        <h2 class="section-title">
+          <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          AI Response
+        </h2>
+        <div class="content-area" id="responseArea">
+          <p class="placeholder-text">AI response will appear here...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+      <button class="clear-button" id="clearButton">
+        <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Clear All
+      </button>
+    </footer>
+
+  </div>
+
+  <!-- Scripts will be loaded here by the extension -->
+  <script src="voiceEngine.js"></script>
+  <script src="ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Voice Assistant Search & Fill",
+  "version": "1.0.0",
+  "description": "A voice-enabled assistant that can search the web, fill forms, and answer queries",
+
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "action": {
+    "default_popup": "src/popup/ui.html"
+  }
+}
