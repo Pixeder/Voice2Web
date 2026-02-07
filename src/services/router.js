@@ -1,313 +1,11 @@
 /**
- * VoiceReplica - Router Service Worker
- * Handles intent routing and browser automation
+ * VoiceReplica - Content Automation Engine
+ * Runs inside webpages and performs actions
  */
 
 'use strict';
 
-/* ============================================================================
-   TAB UTILITIES
-============================================================================ */
-
-// Get currently active tab
-function getActiveTab() {
-  return new Promise((resolve, reject) => {
-
-    chrome.tabs.query(
-      { active: true, currentWindow: true },
-      (tabs) => {
-
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-          return;
-        }
-
-        if (!tabs || tabs.length === 0) {
-          reject(new Error('No active tab'));
-          return;
-        }
-
-        resolve(tabs[0]);
-      }
-    );
-  });
-}
-
-
-// Get any usable tab
-function getAnyValidTab() {
-  return new Promise((resolve, reject) => {
-
-    chrome.tabs.query({}, (tabs) => {
-
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-        return;
-      }
-
-      if (!tabs || tabs.length === 0) {
-        reject(new Error('No tabs available'));
-        return;
-      }
-
-      const valid = tabs.find(t => !t.url.startsWith('chrome://'));
-
-      if (!valid) {
-        reject(new Error('No usable tab'));
-        return;
-      }
-
-      resolve(valid);
-    });
-
-  });
-}
-
-
-// Create a new tab
-function createNewTab(url = 'https://www.google.com') {
-
-  return new Promise((resolve, reject) => {
-
-    chrome.tabs.create({ url }, (tab) => {
-
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-        return;
-      }
-
-      // Wait for full load
-      chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-
-        if (tabId === tab.id && info.status === 'complete') {
-
-          chrome.tabs.onUpdated.removeListener(listener);
-
-          resolve(tab);
-        }
-
-      });
-
-    });
-
-  });
-}
-
-
-// Get usable tab (active → fallback → create)
-async function getUsableTab(createIfMissing = false) {
-
-  try {
-    return await getActiveTab();
-
-  } catch {
-
-    try {
-      return await getAnyValidTab();
-
-    } catch {
-
-      if (createIfMissing) {
-
-        console.log('[Router] Creating new tab...');
-        return await createNewTab();
-      }
-
-      throw new Error('No usable tab found');
-    }
-  }
-}
-
-
-/* ============================================================================
-   MESSAGE SENDER
-============================================================================ */
-
-async function sendToContent(payload, allowCreate = false) {
-
-  try {
-
-    const tab = await getUsableTab(allowCreate);
-
-    console.log('[Router] Using tab:', tab.id);
-
-    return new Promise((resolve, reject) => {
-
-      chrome.tabs.sendMessage(tab.id, payload, (response) => {
-
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-          return;
-        }
-
-        resolve(response);
-      });
-
-    });
-
-  } catch (error) {
-
-    console.error('[Router] Send failed:', error.message);
-
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
-
-
-/* ============================================================================
-   INTENT HANDLERS
-============================================================================ */
-
-async function handleSearch(data) {
-
-  console.log('[Router] SEARCH');
-
-  return sendToContent({
-    type: 'SEARCH',
-    payload: data
-  }, true);
-}
-
-
-async function handleWebsiteSearch(data) {
-
-  console.log('[Router] WEBSITE SEARCH');
-
-  return sendToContent({
-    type: 'WEBSITE_SEARCH',
-    payload: data
-  }, true);
-}
-
-
-async function handleFormFill(data) {
-
-  console.log('[Router] FORM FILL');
-
-  return sendToContent({
-    type: 'FORM_FILL',
-    payload: data
-  }, true);
-}
-
-
-async function handleBooking(data) {
-
-  console.log('[Router] BOOK TICKET');
-
-  return sendToContent({
-    type: 'BOOK_TICKET',
-    payload: data
-  }, true);
-}
-
-
-async function handleOpenSite(data) {
-
-  console.log('[Router] OPEN SITE');
-
-  let url = data.entities.website;
-
-  if (!url) {
-    return { success: false, error: 'No website given' };
-  }
-
-  if (!url.startsWith('http')) {
-    url = 'https://' + url;
-  }
-
-  const tab = await createNewTab(url);
-
-  return {
-    success: true,
-    tabId: tab.id,
-    message: 'Website opened'
-  };
-}
-
-
-async function handleQnA(data) {
-
-  console.log('[Router] QNA');
-
-  return {
-    success: true,
-    message: data.message
-  };
-}
-
-
-async function handleSummarize(data) {
-
-  console.log('[Router] SUMMARIZE');
-
-  return sendToContent({
-    type: 'SUMMARIZE',
-    payload: data
-  }, true);
-}
-
-
-async function handleOther(data) {
-
-  console.log('[Router] OTHER');
-
-  return {
-    success: true,
-    message: data.message
-  };
-}
-
-
-/* ============================================================================
-   ROUTER
-============================================================================ */
-
-async function routeIntent(intentData) {
-
-  const intent = intentData.intent;
-
-  console.log('[Router] Routing intent:', intent);
-
-  switch (intent) {
-
-    case 'search':
-      return handleSearch(intentData);
-
-    case 'website_search':
-      return handleWebsiteSearch(intentData);
-
-    case 'form_fill':
-      return handleFormFill(intentData);
-
-    case 'book_ticket':
-      return handleBooking(intentData);
-
-    case 'open_site':
-      return handleOpenSite(intentData);
-
-    case 'qna':
-      return handleQnA(intentData);
-
-    case 'summarize':
-      return handleSummarize(intentData);
-
-    case 'other':
-      return handleOther(intentData);
-
-    default:
-
-      console.warn('[Router] Unknown intent:', intent);
-
-      return {
-        success: false,
-        error: 'Unknown intent'
-      };
-  }
-}
+console.log('✅ VoiceReplica Content Loaded:', location.href);
 
 
 /* ============================================================================
@@ -316,39 +14,332 @@ async function routeIntent(intentData) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-  if (message.type !== 'PROCESS_INTENT') return;
-
-  console.log('[Router] Received:', message);
+  console.log('[Content] Got:', message.data.data.intent.toUpperCase());
 
   (async () => {
 
     try {
 
-      const result = await routeIntent(message.data);
+      let result;
 
+      switch ( message.data.data.intent.toUpperCase()) {
+
+        case 'SEARCH':
+          result = await handleGoogleSearch(message.data.data);
+          break;
+
+        case 'FORM_FILL':
+          result = await handleFormFill(message.data.data);
+          break;
+
+        case 'WEBSITE_SEARCH':
+          result = await handleWebsiteSearch(message.data.data);
+          break;
+
+        case 'BOOK_TICKET':
+          result = await handleBooking(message.data.data);
+          break;
+
+        case 'SUMMARIZE':
+          result = await handleSummarize();
+          break;
+
+        default:
+          result = { success: false, error: 'Unknown command' };
+      }
+
+      // ✅ ALWAYS reply
       sendResponse({
         success: true,
-        result
+        data: result
       });
 
-    } catch (error) {
+    } catch (err) {
 
-      console.error('[Router] Error:', error);
+      console.error('[Content] Handler error:', err);
 
+      // ✅ ALWAYS reply even on error
       sendResponse({
         success: false,
-        error: error.message
+        error: err.message
       });
     }
 
   })();
 
-  return true; // async response
+  // ✅ KEEP CHANNEL OPEN
+  return true;
 });
 
 
+
 /* ============================================================================
-   STARTUP LOG
+   GOOGLE SEARCH
 ============================================================================ */
 
-console.log('✅ VoiceReplica Router Service Worker Started');
+function handleGoogleSearch(data) {
+  console.log('[Content] Google Search:', data);
+  return sendToContent({
+    type: 'SEARCH',
+    payload: data   // send intent payload
+  });
+}
+
+
+
+
+/* ============================================================================
+   WEBSITE SEARCH BAR
+============================================================================ */
+
+async function handleWebsiteSearch(data) {
+
+  const query = data.entities.query;
+
+  if (!query) {
+    throw new Error('No query provided');
+  }
+
+  console.log('[Content] Website Search:', query);
+
+  const searchInput =
+    document.querySelector('input[type="search"], input[name*="search"], input[placeholder*="search"]');
+
+  if (!searchInput) {
+    throw new Error('No search box found on website');
+  }
+
+  searchInput.focus();
+  searchInput.value = query;
+
+  searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+  searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await wait(300);
+
+  // Try submit
+  if (searchInput.form) {
+    searchInput.form.submit();
+  } else {
+    searchInput.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true
+    }));
+  }
+
+  return {
+    success: true,
+    message: 'Website search completed'
+  };
+}
+
+
+/* ============================================================================
+   FORM FILL
+============================================================================ */
+
+async function handleFormFill(data) {
+
+  const fields = data.entities.form_fields;
+
+  if (!fields || Object.keys(fields).length === 0) {
+    throw new Error('No form fields provided');
+  }
+
+  console.log('[Content] Form Fill:', fields);
+
+  let filled = 0;
+
+  for (const [key, value] of Object.entries(fields)) {
+
+    const input =
+      document.querySelector(
+        `input[name*="${key}"], input[id*="${key}"], textarea[name*="${key}"]`
+      );
+
+    if (!input) continue;
+
+    input.focus();
+    input.value = value;
+
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    filled++;
+  }
+
+  return {
+    success: true,
+    message: `Filled ${filled} fields`
+  };
+}
+
+
+/* ============================================================================
+   BOOKING (BASIC SUPPORT)
+============================================================================ */
+
+async function handleBooking(data) {
+
+  console.log('[Content] Booking automation');
+
+  // Example for ticket booking
+  const { from, to, date } = data.entities;
+
+  await autoFill('from', from);
+  await autoFill('to', to);
+  await autoFill('date', date);
+
+  // Try submit
+  const submit =
+    document.querySelector('button[type="submit"], input[type="submit"]');
+
+  if (submit) {
+    submit.click();
+  }
+
+  return {
+    success: true,
+    message: 'Booking form processed'
+  };
+}
+
+
+async function autoFill(name, value) {
+
+  if (!value) return;
+
+  const el =
+    document.querySelector(`input[name*="${name}"], input[id*="${name}"]`);
+
+  if (!el) return;
+
+  el.focus();
+  el.value = value;
+
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+
+  await wait(200);
+}
+
+
+/* ============================================================================
+   PAGE SUMMARIZATION
+============================================================================ */
+
+async function handleSummarize() {
+
+  console.log('[Content] Summarizing page');
+
+  const text = document.body.innerText;
+
+  const clean = text
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 5000);
+
+  return {
+    success: true,
+    summary: clean,
+    message: 'Page content extracted'
+  };
+}
+
+
+/* ============================================================================
+   UTILITIES
+============================================================================ */
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Send message to content.js safely
+async function sendToContent(payload) {
+
+  try {
+
+    // 1️⃣ Try active tab
+    let tabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    });
+
+    let tab = tabs[0];
+
+    // 2️⃣ If no active tab → find any valid tab
+    if (!tab) {
+
+      const allTabs = await chrome.tabs.query({});
+
+      tab = allTabs.find(t =>
+        t.url &&
+        !t.url.startsWith('chrome://') &&
+        !t.url.startsWith('edge://') &&
+        !t.url.startsWith('about:')
+      );
+    }
+
+    // 3️⃣ If still none → create new tab
+    if (!tab) {
+
+      console.log('[Router] No tab → creating new tab');
+
+      tab = await new Promise((resolve) => {
+
+        chrome.tabs.create(
+          { url: 'https://www.google.com' },
+          resolve
+        );
+
+      });
+
+      // Wait for load
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    const tabId = tab.id;
+
+    // 4️⃣ Inject content.js
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['src/services/content.js']
+    });
+
+    console.log('[Router] content.js injected in', tabId);
+
+    // 5️⃣ Wait for listener
+    await new Promise(r => setTimeout(r, 600));
+    console.log('[Router] Sending payload to content.js:', payload);
+    // 6️⃣ Send message
+    return await new Promise((resolve, reject) => {
+
+      chrome.tabs.sendMessage(tabId, payload, (response) => {
+
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        if (!response) {
+          reject(new Error('No response from content.js'));
+          return;
+        }
+        
+        resolve(response);
+      });
+
+    });
+
+  } catch (err) {
+
+    console.error('[Router] sendToContent failed:', err.message);
+
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+}
+
