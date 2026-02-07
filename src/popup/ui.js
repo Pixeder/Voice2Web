@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-(function() {
+(function () {
   'use strict';
 
   // ============================================================================
@@ -18,15 +18,19 @@
     // Control buttons
     micButton: document.getElementById('micButton'),
     clearButton: document.getElementById('clearButton'),
-    
+    enableVoiceBtn: document.getElementById('enableVoiceBtn'),
+
+    // Overlays
+    permissionOverlay: document.getElementById('permissionOverlay'),
+
     // Status display
     statusText: document.getElementById('statusText'),
     statusDot: null, // Will be selected dynamically
-    
+
     // Content areas
     transcriptArea: document.getElementById('transcriptArea'),
     responseArea: document.getElementById('responseArea'),
-    
+
     // Labels
     micLabel: null // Will be selected dynamically
   };
@@ -51,10 +55,10 @@
   const config = {
     // Mock backend response delay (ms)
     responseDelay: 1500,
-    
+
     // Auto-clear response delay after showing (ms) - 0 to disable
     autoClearDelay: 0,
-    
+
     // Status messages
     statusMessages: {
       ready: 'Ready',
@@ -63,7 +67,7 @@
       responding: 'Responding...',
       error: 'Error occurred'
     },
-    
+
     // Placeholder texts
     placeholders: {
       transcript: 'Your voice transcript will appear here...',
@@ -84,7 +88,7 @@
       // Get additional DOM elements
       elements.statusDot = document.querySelector('.status-dot');
       elements.micLabel = document.querySelector('.mic-label');
-      
+
       // Verify VoiceEngine is available
       if (typeof VoiceEngine === 'undefined') {
         showError({
@@ -94,18 +98,18 @@
         });
         return;
       }
-      
+
       // Bind event listeners
       bindEventListeners();
-      
+
       // Initialize VoiceEngine event handlers
       initializeVoiceEngine();
-      
-      // Set initial UI state
-      setUIState('ready');
-      
+
+      // Check voice permission state
+      checkVoicePermission();
+
       console.log('VoiceReplica UI initialized successfully');
-      
+
     } catch (error) {
       console.error('Failed to initialize UI:', error);
       showError({
@@ -124,12 +128,17 @@
     if (elements.micButton) {
       elements.micButton.addEventListener('click', handleMicButtonClick);
     }
-    
+
     // Clear button - reset all content
     if (elements.clearButton) {
       elements.clearButton.addEventListener('click', handleClearButtonClick);
     }
-    
+
+    // Enable Voice button
+    if (elements.enableVoiceBtn) {
+      elements.enableVoiceBtn.addEventListener('click', handleEnableVoiceClick);
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcuts);
   };
@@ -142,17 +151,17 @@
     VoiceEngine.onTranscript((data) => {
       handleTranscript(data);
     });
-    
+
     // Listen for errors
     VoiceEngine.onError((errorInfo) => {
       handleVoiceError(errorInfo);
     });
-    
+
     // Listen for end events
     VoiceEngine.onEnd((data) => {
       handleVoiceEnd(data);
     });
-    
+
     // Listen for state changes (if available)
     if (typeof VoiceEngine.onStateChange === 'function') {
       VoiceEngine.onStateChange((data) => {
@@ -186,15 +195,36 @@
     if (state.isListening) {
       stopListening();
     }
-    
+
     // Clear all content
     clearAllContent();
-    
+
     // Reset to ready state
     setUIState('ready');
-    
+
     // Visual feedback
     animateButtonPress(elements.clearButton);
+  };
+
+  /**
+   * Handle enable voice button click
+   * Opens permission page in a new tab
+   */
+  const handleEnableVoiceClick = () => {
+    if (!elements.enableVoiceBtn) return;
+
+    // Visual feedback
+    animateButtonPress(elements.enableVoiceBtn);
+
+    // Open permission page in new tab
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: 'src/permission.html' });
+      // Close popup so user focuses on the new tab
+      window.close();
+    } else {
+      console.warn('chrome.tabs not available');
+      alert('Please open src/permission.html manually to enable voice.');
+    }
   };
 
   /**
@@ -207,13 +237,13 @@
       event.preventDefault();
       handleMicButtonClick();
     }
-    
+
     // Escape - stop listening
     if (event.code === 'Escape' && state.isListening) {
       event.preventDefault();
       stopListening();
     }
-    
+
     // Ctrl/Cmd + K - clear all
     if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
       event.preventDefault();
@@ -235,22 +265,22 @@
    */
   const handleTranscript = (data) => {
     const { transcript, isFinal, confidence } = data;
-    
+
     if (isFinal) {
       // Store final transcript
       state.finalTranscript = transcript;
       state.currentTranscript = '';
-      
+
       // Display final transcript
       displayTranscript(transcript, true);
-      
+
       // Process the final transcript (get AI response)
       processTranscript(transcript);
-      
+
     } else {
       // Store interim transcript
       state.currentTranscript = transcript;
-      
+
       // Display interim transcript
       displayTranscript(transcript, false);
     }
@@ -266,16 +296,16 @@
    */
   const handleVoiceError = (errorInfo) => {
     console.error('VoiceEngine error:', errorInfo);
-    
+
     state.hasError = true;
     state.isListening = false;
-    
+
     // Show error in UI
     showError(errorInfo);
-    
+
     // Update UI state
     setUIState('error');
-    
+
     // Update mic button to stopped state
     updateMicButton(false);
   };
@@ -298,7 +328,7 @@
    */
   const handleVoiceStateChange = (data) => {
     console.log('VoiceEngine state change:', data);
-    
+
     // Sync UI state with engine state
     if (data.isListening !== state.isListening) {
       state.isListening = data.isListening;
@@ -317,19 +347,19 @@
     try {
       // Clear any previous errors
       state.hasError = false;
-      
+
       // Clear previous transcript and response
       state.currentTranscript = '';
       state.finalTranscript = '';
       clearTranscript();
       clearResponse();
-      
+
       // Record session start time
       state.sessionStartTime = Date.now();
-      
+
       // Start the voice engine
       const success = VoiceEngine.start();
-      
+
       if (success) {
         state.isListening = true;
         setUIState('listening');
@@ -341,7 +371,7 @@
           recoverable: true
         });
       }
-      
+
     } catch (error) {
       console.error('Error starting voice recognition:', error);
       showError({
@@ -359,11 +389,11 @@
     try {
       // Stop the voice engine
       VoiceEngine.stop();
-      
+
       state.isListening = false;
       setUIState('ready');
       updateMicButton(false);
-      
+
     } catch (error) {
       console.error('Error stopping voice recognition:', error);
     }
@@ -379,13 +409,13 @@
    */
   const setUIState = (stateName) => {
     const statusMessage = config.statusMessages[stateName] || stateName;
-    
+
     // Update status text
     updateStatusText(statusMessage);
-    
+
     // Update status dot
     updateStatusDot(stateName);
-    
+
     // Update mic label
     updateMicLabel(stateName);
   };
@@ -406,10 +436,10 @@
    */
   const updateStatusDot = (stateName) => {
     if (!elements.statusDot) return;
-    
+
     // Remove all state classes
     elements.statusDot.classList.remove('ready', 'listening', 'processing', 'error');
-    
+
     // Add current state class
     elements.statusDot.classList.add(stateName);
   };
@@ -420,7 +450,7 @@
    */
   const updateMicButton = (isListening) => {
     if (!elements.micButton) return;
-    
+
     if (isListening) {
       elements.micButton.classList.add('listening');
       elements.micButton.setAttribute('aria-label', 'Stop listening');
@@ -436,14 +466,14 @@
    */
   const updateMicLabel = (stateName) => {
     if (!elements.micLabel) return;
-    
+
     const labels = {
       ready: 'Click to Start',
       listening: 'Listening...',
       processing: 'Processing...',
       error: 'Try Again'
     };
-    
+
     elements.micLabel.textContent = labels[stateName] || 'Click to Start';
   };
 
@@ -458,23 +488,23 @@
    */
   const displayTranscript = (text, isFinal = false) => {
     if (!elements.transcriptArea) return;
-    
+
     // Clear placeholder
     elements.transcriptArea.classList.add('has-content');
-    
+
     // Create or update transcript element
     let transcriptElement = elements.transcriptArea.querySelector('.transcript-text');
-    
+
     if (!transcriptElement) {
       transcriptElement = document.createElement('p');
       transcriptElement.className = 'transcript-text';
       elements.transcriptArea.innerHTML = '';
       elements.transcriptArea.appendChild(transcriptElement);
     }
-    
+
     // Update text
     transcriptElement.textContent = text;
-    
+
     // Add styling for interim vs final
     if (isFinal) {
       transcriptElement.style.fontWeight = '600';
@@ -483,7 +513,7 @@
       transcriptElement.style.fontWeight = '400';
       transcriptElement.style.color = 'var(--gray-500)';
     }
-    
+
     // Scroll to bottom
     elements.transcriptArea.scrollTop = elements.transcriptArea.scrollHeight;
   };
@@ -494,28 +524,28 @@
    */
   const displayResponse = (text) => {
     if (!elements.responseArea) return;
-    
+
     // Clear placeholder
     elements.responseArea.classList.add('has-content');
-    
+
     // Create or update response element
     let responseElement = elements.responseArea.querySelector('.response-text');
-    
+
     if (!responseElement) {
       responseElement = document.createElement('p');
       responseElement.className = 'response-text';
       elements.responseArea.innerHTML = '';
       elements.responseArea.appendChild(responseElement);
     }
-    
+
     // Update text
     responseElement.textContent = text;
     responseElement.style.fontWeight = '500';
     responseElement.style.color = 'var(--gray-800)';
-    
+
     // Scroll to bottom
     elements.responseArea.scrollTop = elements.responseArea.scrollHeight;
-    
+
     // Store response
     state.currentResponse = text;
   };
@@ -526,10 +556,10 @@
    */
   const showError = (errorInfo) => {
     const { type, message, fatal } = errorInfo;
-    
+
     // Update status
     updateStatusText('Error: ' + type);
-    
+
     // Show error in response area
     if (elements.responseArea) {
       elements.responseArea.classList.add('has-content');
@@ -547,7 +577,7 @@
    */
   const clearTranscript = () => {
     if (!elements.transcriptArea) return;
-    
+
     elements.transcriptArea.classList.remove('has-content');
     elements.transcriptArea.innerHTML = `
       <p class="placeholder-text">${config.placeholders.transcript}</p>
@@ -559,7 +589,7 @@
    */
   const clearResponse = () => {
     if (!elements.responseArea) return;
-    
+
     elements.responseArea.classList.remove('has-content');
     elements.responseArea.innerHTML = `
       <p class="placeholder-text">${config.placeholders.response}</p>
@@ -572,7 +602,7 @@
   const clearAllContent = () => {
     clearTranscript();
     clearResponse();
-    
+
     // Reset state
     state.currentTranscript = '';
     state.finalTranscript = '';
@@ -592,27 +622,27 @@
     if (!transcript || transcript.trim().length === 0) {
       return;
     }
-    
+
     // Update UI to processing state
     setUIState('processing');
-    
+
     try {
       // Simulate API call delay
       await delay(config.responseDelay);
-      
+
       // Generate mock response
       const response = generateMockResponse(transcript);
-      
+
       // Update UI to responding state
       setUIState('responding');
-      
+
       // Display response
       displayResponse(response);
-      
+
       // Return to ready state after brief delay
       await delay(500);
       setUIState('ready');
-      
+
     } catch (error) {
       console.error('Error processing transcript:', error);
       showError({
@@ -633,29 +663,29 @@
    */
   const generateMockResponse = (transcript) => {
     const lowerTranscript = transcript.toLowerCase();
-    
+
     // Simple keyword-based responses (mock)
     if (lowerTranscript.includes('hello') || lowerTranscript.includes('hi')) {
       return "Hello! I'm VoiceReplica, your AI voice assistant. How can I help you today?";
     }
-    
+
     if (lowerTranscript.includes('weather')) {
       return "I don't have access to real-time weather data yet, but I can help you with other tasks!";
     }
-    
+
     if (lowerTranscript.includes('time')) {
       const currentTime = new Date().toLocaleTimeString();
       return `The current time is ${currentTime}.`;
     }
-    
+
     if (lowerTranscript.includes('help')) {
       return "I can help you with various tasks. Try asking me questions, giving commands, or just having a conversation!";
     }
-    
+
     if (lowerTranscript.includes('thank')) {
       return "You're welcome! I'm here to help whenever you need me.";
     }
-    
+
     // Default response
     return `I heard you say: "${transcript}". This is a mock response. Connect me to your AI backend to provide real responses!`;
   };
@@ -679,7 +709,7 @@
    */
   const animateButtonPress = (button) => {
     if (!button) return;
-    
+
     button.style.transform = 'scale(0.95)';
     setTimeout(() => {
       button.style.transform = '';
@@ -706,6 +736,84 @@
     clearAll: clearAllContent,
     startListening,
     stopListening
+  };
+
+  // ============================================================================
+  // Storage Helpers
+  // ============================================================================
+
+  /**
+   * Check if voice is enabled in storage
+   */
+  const checkVoicePermission = async () => {
+    try {
+      const result = await getStorage(['voiceEnabled']);
+
+      if (result.voiceEnabled) {
+        // Voice is enabled, show main UI
+        if (elements.permissionOverlay) {
+          elements.permissionOverlay.classList.add('hidden');
+        }
+        setUIState('ready');
+      } else {
+        // Voice NOT enabled, show overlay
+        if (elements.permissionOverlay) {
+          elements.permissionOverlay.classList.remove('hidden');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking storage:', error);
+      // Fallback: Show permission overlay to be safe
+      if (elements.permissionOverlay) {
+        elements.permissionOverlay.classList.remove('hidden');
+      }
+    }
+  };
+
+  /**
+   * Get data from chrome.storage.local
+   * @param {string|string[]} keys - Keys to retrieve
+   * @returns {Promise<Object>} Storage data
+   */
+  const getStorage = (keys) => {
+    return new Promise((resolve, reject) => {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(keys, (result) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(result);
+          }
+        });
+      } else {
+        // Fallback for non-extension environment (testing)
+        console.warn('chrome.storage not available, using mock');
+        resolve({ voiceEnabled: false });
+      }
+    });
+  };
+
+  /**
+   * Set data to chrome.storage.local
+   * @param {Object} data - Data to set
+   * @returns {Promise<void>}
+   */
+  const setStorage = (data) => {
+    return new Promise((resolve, reject) => {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set(data, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve();
+          }
+        });
+      } else {
+        // Fallback
+        console.warn('chrome.storage not available');
+        resolve();
+      }
+    });
   };
 
   // ============================================================================

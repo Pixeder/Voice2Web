@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enable Voice Access - VoiceReplica</title>
+  <link rel="stylesheet" href="popup/ui.css">
+  <style>
+    body {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-50);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    .permission-container {
+      background: var(--white);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      max-width: 480px;
+      text-align: center;
+    }
+    .permission-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: var(--purple-ultra-light);
+      color: var(--purple-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .permission-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: 16px;
+    }
+    p {
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .button-primary {
+      background: var(--purple-primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .button-primary:hover {
+      background: var(--purple-dark);
+    }
+    .status-message {
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    .success {
+        color: var(--success-green);
+        display: none;
+    }
+    .error {
+        color: var(--error-red);
+        display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="permission-container">
+    <div class="permission-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+    </div>
+    <h1>Enable Voice Access</h1>
+    <p>VoiceReplica needs access to your microphone to work. Click the button below to allow access. This permission is required only once.</p>
+    
+    <button id="requestPermissionBtn" class="button-primary">Allow Microphone Access</button>
+    
+    <div id="statusMessage" class="status-message"></div>
+    <div id="successMessage" class="success">
+        <h3>Access Granted!</h3>
+        <p>You can close this tab and start using the extension.</p>
+    </div>
+    <div id="errorMessage" class="error">
+        <h3>Access Denied</h3>
+        <p>Please check your browser settings and try again.</p>
+    </div>
+  </div>
+  <script src="permission.js"></script>
+</body>
+</html>
