@@ -326,7 +326,7 @@ USER COMMAND:
     // if (!parsedResponse.confidence) {
     //   parsedResponse.confidence = 0.75;
     // }
-    console.log("Parsed Response" , parsedResponse)
+    // console.log("Parsed Response" , parsedResponse)
 
     return parsedResponse;
 
@@ -654,12 +654,13 @@ export const processIntent = async (text) => {
 
     // Ensure all required fields are present
     return {
-      intent: result.intent || 'unknown',
-      entities: result.entities || {},
-      message: result.message || 'Processing complete',
-      confidence: result.confidence || 0.5,
-      model: result.model || config.llm.model
-    };
+    intent: result?.data?.intent || 'unknown',
+    entities: result?.data?.entities || {},
+    message: result?.data?.message || 'Processing complete',
+    confidence: result?.data?.confidence || 0.5,
+    model: result?.data?.metadata?.model || config.llm.model
+  };
+
 
   } catch (error) {
     if (error instanceof ApiError) {
