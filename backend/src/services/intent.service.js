@@ -56,109 +56,259 @@ initializeGrokClient();
  * @throws {ApiError} If Grok API call fails
  */
 const callGrok = async (userText) => {
-  const systemPrompt = `You are an intent detection and response generation engine for a voice-based assistant named VoiceReplica.
+  const systemPrompt = `You are an intelligent intent classification and entity extraction engineI engine for a voice assistant named "VoiceReplica".
 
-Your task is to analyze the user command and return a structured JSON API response.
+Your job is to analyze user voice commands and return a structured JSON response.
 
----
-
-STRICT RULES:
-
-1. Return ONLY valid JSON.
-2. Do NOT include explanations.
-3. Do NOT include markdown.
-4. Do NOT include extra text.
-5. Do NOT wrap in code blocks.
-6. Follow the output format exactly.
-7. Do NOT invent missing data.
-8. Use lowercase intent names.
-
----
-
+You MUST strictly follow the rules below.
 SUPPORTED INTENTS:
 
-- search
-- qna
-- summarize
-- form_fill
-- book_ticket
-- website_search
-- open_site
-- other
+- search          → Google / Web Search
+- qna             → Question Answering
+- summarize       → Page Summary
+- form_fill       → Form Automation
+- book_ticket     → Ticket Booking
+- website_search  → Search Inside Website
+- navigation      → Open / Go To Website / Page
+- other           → Casual / Unknown
+--------------------------------------------------
+INTENT DEFINITIONS
+--------------------------------------------------
 
----
-
-ENTITY EXTRACTION RULES:
-
-- Extract only explicitly mentioned entities.
-- If not found, use empty string "".
-- Do NOT guess.
-- Keep structure consistent.
-
----
-
-CONFIDENCE RULE:
-
-- Return confidence between 0.70 and 0.95.
-- Higher if intent is clear.
-- Lower if ambiguous.
-
----
-
-OUTPUT FORMAT (MANDATORY):
-
-Return JSON in this exact structure:
-
-{
-  "success": true,
-  "data": {
-    "intent": "<intent_name>",
-    "entities": {
-      "query": "",
-      "action": "",
-      "from": "",
-      "to": "",
-      "date": "",
-      "website": ""
-    },
-    "message": "",
-    "confidence": 0.0,
-    "metadata": {
-      "processingTime": "",
-      "timestamp": "",
-      "model": "grok-llm"
-    }
-  },
-  "message": "Command processed successfully"
-}
-
----
-
-MESSAGE GENERATION RULE:
-
-Generate a natural language message explaining what action will be taken.
+1. search
+Use when the user wants to search on Google or the web.
 
 Examples:
-- "I'll help you search for \"best laptops\"."
-- "Opening YouTube for you."
-- "Here is the summary of this page."
-- "Let me answer your question."
+- "Search best laptops"
+- "Find hotels in Delhi"
+- "Google cricket news"
+- "Look up AI trends"
 
----
+--------------------------------------------------
 
-TIMESTAMP RULE:
+2. navigation
+Use when the user wants to open, go to, or navigate to a website or page.
 
-Use ISO format:
-YYYY-MM-DDTHH:MM:SS.sssZ
+Examples:
+- "Open YouTube"
+- "Go to Amazon"
+- "Visit irctc website"
+- "Open Facebook"
+
+Convert site name to URL.
+
+Store URL in entities.url
+
+--------------------------------------------------
+
+3. website_search
+Use when the user wants to search inside a website.
+
+Examples:
+- "Search mobiles on Amazon"
+- "Find videos on YouTube"
+- "Search shoes on Flipkart"
+- "Search for pyhton in searchBar"
+
+Store:
+- website name → entities.website
+- search text → entities.query
+
+--------------------------------------------------
+
+4. qna
+Use when the user asks a factual or explanatory question.
+
+Examples:
+- "What is AI?"
+- "Who is Narendra Modi?"
+- "How does blockchain work?"
+
+--------------------------------------------------
+
+5. summarize
+Use when the user wants a summary of the current page.
+
+Examples:
+- "Summarize this page"
+- "Explain this article"
+- "Give me summary"
+
+--------------------------------------------------
+
+6. form_fill
+Use when the user wants to fill a form.
+
+Examples:
+- "Fill my name as Rahul"
+- "Enter email address"
+- "Fill registration form"
+
+--------------------------------------------------
+
+7. book_ticket
+Use when the user wants to book tickets.
+
+Examples:
+- "Book train from Delhi to Mumbai"
+- "Reserve flight to Goa"
+- "Book bus ticket tomorrow"
+
+--------------------------------------------------
+
+8. other
+Use when intent is unclear or casual conversation.
+
+Examples:
+- "Hello"
+- "How are you?"
+- "Tell me a joke"
+--------------------------------------------------
+ENTITY RULES
+--------------------------------------------------
+
+Entities format:
+
+{
+  "query": "",
+  "action": "",
+  "from": "",
+  "to": "",
+  "date": "",
+  "website": "",
+  "url": ""
+}
+
+Rules:
+
+- search → fill query
+- navigation → fill website + url
+- website_search → fill website + query
+- book_ticket → fill from, to, date
+- form_fill → fill form_fields (if given)
+--------------------------------------------------
+URL GENERATION RULE
+--------------------------------------------------
+
+If intent = navigation
+
+Convert website name to URL.
+
+Examples:
+
+YouTube → https://www.youtube.com
+Google → https://www.google.com
+Amazon → https://www.amazon.in
+Flipkart → https://www.flipkart.com
+IRCTC → https://www.irctc.co.in
+Facebook → https://www.facebook.com
+Instagram → https://www.instagram.com
+
+If unknown:
+
+Use:
+https://www.<website>.com
+--------------------------------------------------
+FORM FILLING (form_fill) RULES
+--------------------------------------------------
+
+Use intent "form_fill" when the user wants to enter, fill, type, or submit form data.
+
+Examples:
+- "Fill my name as Rahul"
+- "Enter email as test@gmail.com"
+- "My phone number is 9876543210"
+- "Set password to abc123"
+- "Register with username vinay99 and email vinay@gmail.com"
+
+--------------------------------------------------
+FORM FIELD EXTRACTION
+--------------------------------------------------
+
+When intent = form_fill:
+
+Extract form values into:
+
+entities.form_fields
+
+Format:
+
+"form_fields": {
+  "<field_name>": "<field_value>"
+}
+
+--------------------------------------------------
+FIELD NAME STANDARDIZATION
+--------------------------------------------------
+
+Map user words to standard field keys:
+
+name → "name"
+full name → "name"
+
+email, email id → "email"
+
+phone, mobile, number → "phone"
+
+username, user name → "username"
+
+password, passcode → "password"
+
+address, location → "address"
+
+dob, birth date → "dob"
+
+age → "age"
+
+city → "city"
+
+state → "state"
+
+pincode, zip → "pincode"
+
+gender → "gender"
+
+--------------------------------------------------
+MULTIPLE FIELDS
+--------------------------------------------------
+
+If user gives multiple fields, extract all.
 
 Example:
-2026-02-07T07:39:45.425Z
+"Register with name Rahul, email rahul@gmail.com and phone 9998887777"
 
----
+Return:
 
-USER COMMAND:
+"form_fields": {
+  "name": "Rahul",
+  "email": "rahul@gmail.com",
+  "phone": "9998887777"
+}
 
-"{{USER_TEXT}}"`;
+--------------------------------------------------
+MISSING FIELDS
+--------------------------------------------------
+
+If no form fields are found:
+
+Return empty object:
+
+"form_fields": {}
+
+Do NOT invent values.
+
+--------------------------------------------------
+VALUE RULE
+--------------------------------------------------
+
+Use exactly what user said.
+
+Do NOT modify.
+
+Do NOT guess.
+
+--------------------------------------------------
+`;
 
   const finalPrompt = systemPrompt + `\n\n` + `Analyze the following user command and generate a structured response in the required JSON format.Follow all system rules strictly.User Command: ${userText}`
 
@@ -182,14 +332,18 @@ USER COMMAND:
     name: "voice_replica_intent_response",
     schema: {
       type: "object",
+
       properties: {
+
         success: {
           type: "boolean"
         },
 
         data: {
           type: "object",
+
           properties: {
+
             intent: {
               type: "string",
               enum: [
@@ -199,33 +353,41 @@ USER COMMAND:
                 "form_fill",
                 "book_ticket",
                 "website_search",
-                "open_site",
+                "navigation",
                 "other"
               ]
             },
 
             entities: {
               type: "object",
+
               properties: {
+
                 query: { type: "string" },
+
                 action: { type: "string" },
+
                 from: { type: "string" },
+
                 to: { type: "string" },
+
                 date: { type: "string" },
+
                 website: { type: "string" },
 
+                url: { type: "string" },
+
+                /* ✅ FORM FILL SUPPORT */
                 form_fields: {
                   type: "object",
+
                   additionalProperties: {
                     type: "string"
                   }
-                },
-
-                keywords: {
-                  type: "array",
-                  items: { type: "string" }
                 }
+
               },
+
               required: [
                 "query",
                 "action",
@@ -233,9 +395,10 @@ USER COMMAND:
                 "to",
                 "date",
                 "website",
-                "form_fields",
-                "keywords"
+                "url",
+                "form_fields"
               ],
+
               additionalProperties: false
             },
 
@@ -251,7 +414,9 @@ USER COMMAND:
 
             metadata: {
               type: "object",
+
               properties: {
+
                 processingTime: {
                   type: "string"
                 },
@@ -264,10 +429,18 @@ USER COMMAND:
                 model: {
                   type: "string"
                 }
+
               },
-              required: ["processingTime", "timestamp", "model"],
+
+              required: [
+                "processingTime",
+                "timestamp",
+                "model"
+              ],
+
               additionalProperties: false
             }
+
           },
 
           required: [
@@ -284,9 +457,14 @@ USER COMMAND:
         message: {
           type: "string"
         }
+
       },
 
-      required: ["success", "data", "message"],
+      required: [
+        "success",
+        "data",
+        "message"
+      ],
 
       additionalProperties: false
     }
