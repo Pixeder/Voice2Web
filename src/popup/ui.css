@@ -1,63 +1,37 @@
 /* ============================================================================
-   VoiceReplica - UI Styles (FIXED)
-   Chrome Extension Popup Interface
+   VoiceReplica - "Porcelain & Sand" Theme
    ============================================================================ */
 
-/* ============================================================================
-   CSS Variables - Purple Theme
-   ============================================================================ */
 :root {
-  /* Primary Purple Palette */
-  --purple-primary: #7c3aed;
-  --purple-dark: #5b21b6;
-  --purple-light: #a78bfa;
-  --purple-lighter: #ddd6fe;
-  --purple-ultra-light: #f5f3ff;
+  /* PALETTE: Warm White & Beige */
+  --bg-color: #fdfcf8;
+  /* Soft gradient from Ivory to Warm Sand */
+  --bg-gradient: linear-gradient(180deg, #fdfcf8 0%, #f2efe9 100%);
   
-  /* Neutral Colors */
-  --white: #ffffff;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
+  /* SURFACES: Clean White Glass */
+  --surface-glass: rgba(255, 255, 255, 0.7);
+  --surface-border: 1px solid rgba(0, 0, 0, 0.06);
+  --surface-highlight: 1px solid rgba(255, 255, 255, 0.9);
   
-  /* Status Colors */
-  --success-green: #10b981;
-  --error-red: #ef4444;
-  --warning-yellow: #f59e0b;
+  /* TEXT: Dark Taupe / Charcoal */
+  --text-main: #3e3a36;  /* Deep warm charcoal */
+  --text-muted: #948c82; /* Warm grey */
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-purple: 0 4px 14px 0 rgba(124, 58, 237, 0.25);
+  /* ACCENTS: Champagne Gold */
+  --accent-gold: #c5a880;
+  --accent-gradient: linear-gradient(135deg, #e6d5b8 0%, #c5a880 100%);
   
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  /* STATUS */
+  --delete-red: #dc2626;
+  --delete-red-bg: rgba(220, 38, 38, 0.08);
+  --warning: #d97706;
   
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-  
-  /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 250ms ease-in-out;
-  --transition-slow: 350ms ease-in-out;
+  --radius-md: 14px;
+  --radius-sm: 8px;
 }
 
 /* ============================================================================
-   Global Styles & Reset - CRITICAL FIX
+   Global Reset & No-Scroll
    ============================================================================ */
 * {
   margin: 0;
@@ -65,29 +39,14 @@
   box-sizing: border-box;
 }
 
-html {
+html, body {
   width: 360px;
   height: 550px;
-  overflow: hidden;
-}
-
-body {
-  width: 360px;
-  min-width: 360px;
-  max-width: 360px;
-  height: 550px;
-  min-height: 550px;
-  max-height: 550px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--gray-800);
-  background-color: var(--white);
-  overflow: hidden;
+  overflow: hidden; /* STRICT: No scrolling */
+  background-color: var(--bg-color);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  margin: 0;
-  padding: 0;
 }
 
 /* ============================================================================
@@ -96,445 +55,230 @@ body {
 .container {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
-  min-height: 550px;
-  background-color: var(--gray-50);
-  overflow-y: auto;
-  overflow-x: hidden;
+  width: 100%;
+  background: var(--bg-gradient);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Custom Scrollbar */
-.container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.container::-webkit-scrollbar-track {
-  background: var(--gray-100);
-}
-
-.container::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: var(--radius-full);
-}
-
-.container::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
+/* Texture: Subtle Grain (Like high-quality paper) */
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.15; /* Subtle noise visible on light bg */
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ============================================================================
-   Header Section
+   Header
    ============================================================================ */
 .header {
-  background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-dark) 100%);
-  color: var(--white);
-  padding: var(--spacing-lg) var(--spacing-md);
+  flex: 0 0 auto;
+  padding: 24px 20px 10px;
   text-align: center;
-  box-shadow: var(--shadow-md);
-  flex-shrink: 0;
+  z-index: 1;
 }
 
 .app-name {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   letter-spacing: -0.5px;
-  margin-bottom: var(--spacing-xs);
+  /* Gold Gradient Text */
+  background: linear-gradient(135deg, #3e3a36 0%, #6b635b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .app-subtitle {
-  font-size: 13px;
-  font-weight: 400;
-  opacity: 0.95;
-  letter-spacing: 0.3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
 }
 
 /* ============================================================================
-   Microphone Control Area
+   Microphone Control
    ============================================================================ */
 .mic-control {
+  flex: 0 0 auto;
+  padding: 15px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-lg) var(--spacing-md);
-  gap: var(--spacing-md);
-  flex-shrink: 0;
+  gap: 12px;
+  z-index: 1;
 }
 
 .mic-button {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-dark) 100%);
-  border: none;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  /* White Ceramic Look */
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
   cursor: pointer;
-  box-shadow: var(--shadow-purple);
-  transition: all var(--transition-normal);
+  color: var(--text-main);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Soft, warm shadow */
+  box-shadow: 0 8px 20px rgba(197, 168, 128, 0.15), 0 2px 5px rgba(0,0,0,0.05);
   position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.mic-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity var(--transition-normal);
 }
 
 .mic-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(124, 58, 237, 0.35);
+  box-shadow: 0 12px 25px rgba(197, 168, 128, 0.25);
+  border-color: var(--accent-gold);
 }
 
-.mic-button:hover::before {
-  opacity: 1;
-}
-
-.mic-button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-md);
-}
-
-/* Listening State */
+/* ACTIVE STATE: Champagne Gold Pulse */
 .mic-button.listening {
-  background: linear-gradient(135deg, var(--success-green) 0%, #059669 100%);
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(197, 168, 128, 0.4);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.4);
-  }
-  50% {
-    box-shadow: 0 4px 20px 0 rgba(16, 185, 129, 0.6);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(197, 168, 128, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(197, 168, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(197, 168, 128, 0); }
 }
 
-.mic-icon {
-  width: 36px;
-  height: 36px;
-  color: var(--white);
-  stroke-width: 2.5;
-  flex-shrink: 0;
-}
+.mic-icon { width: 32px; height: 32px; stroke-width: 2.5px; }
+.mic-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
 
-.mic-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray-700);
-  letter-spacing: 0.3px;
-}
-
-/* ============================================================================
-   Status Section
-   ============================================================================ */
+/* Status Bar */
 .status-section {
-  padding: 0 var(--spacing-md) var(--spacing-md);
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  padding-bottom: 12px;
+  text-align: center;
+  z-index: 1;
 }
 
 .status-card {
-  background: var(--white);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
-}
-
-.status-indicator {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.6);
+  border: var(--surface-border);
+  backdrop-filter: blur(5px);
 }
 
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-full);
-  background-color: var(--gray-400);
-  transition: background-color var(--transition-normal);
-  flex-shrink: 0;
-}
-
-/* Status States */
-.status-dot.ready {
-  background-color: var(--gray-400);
-}
-
-.status-dot.listening {
-  background-color: var(--success-green);
-  animation: blink 1.5s infinite;
-}
-
-.status-dot.processing {
-  background-color: var(--warning-yellow);
-}
-
-.status-dot.error {
-  background-color: var(--error-red);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.status-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gray-700);
-  letter-spacing: 0.2px;
-}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background-color: #d1cbc1; }
+.status-dot.listening { background-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
+.status-dot.processing { background-color: var(--warning); }
+.status-dot.error { background-color: var(--delete-red); }
+.status-text { font-size: 11px; font-weight: 600; color: var(--text-muted); }
 
 /* ============================================================================
-   Section Cards (Transcript & Response)
+   Content Areas (Flex Grow)
    ============================================================================ */
 .transcript-section,
 .response-section {
-  padding: 0 var(--spacing-md) var(--spacing-md);
-  flex-shrink: 0;
+  flex: 1;
+  padding: 0 20px 10px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
 }
 
 .section-card {
-  background: var(--white);
+  /* Frosted White Glass */
+  background: var(--surface-glass);
+  border: var(--surface-border);
   border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
-  transition: box-shadow var(--transition-normal);
-}
-
-.section-card:hover {
-  box-shadow: var(--shadow-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  backdrop-filter: blur(10px);
+  /* Inner highlight for 3D feel */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 10px rgba(0,0,0,0.03);
 }
 
 .section-title {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 14px;
+  gap: 8px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--purple-dark);
-  margin-bottom: var(--spacing-md);
-  letter-spacing: 0.3px;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.title-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--purple-primary);
-  stroke-width: 2.5;
-  flex-shrink: 0;
-}
+.title-icon { width: 14px; height: 14px; opacity: 1; }
 
+/* Text Content */
 .content-area {
-  min-height: 60px;
-  max-height: 100px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: var(--spacing-md);
-  background: var(--gray-50);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--gray-200);
+  flex: 1;
+  overflow: hidden; /* STRICT: Clips text */
+  padding: 4px 0;
   font-size: 14px;
-  line-height: 1.6;
-  color: var(--gray-800);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-main);
   word-wrap: break-word;
-  word-break: break-word;
+  /* Fade out mask at bottom (White fade) */
+  mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 }
 
-/* Content Area Scrollbar */
-.content-area::-webkit-scrollbar {
-  width: 5px;
-}
-
-.content-area::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: var(--radius-sm);
-}
-
-.content-area::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: var(--radius-sm);
-}
-
-.content-area::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
-}
-
-.placeholder-text {
-  color: var(--gray-400);
-  font-style: italic;
-  font-size: 13px;
-}
-
-/* Active Content */
-.content-area.has-content {
-  color: var(--gray-800);
-}
-
-.content-area.has-content .placeholder-text {
-  display: none;
-}
+.placeholder-text { color: #afa69c; font-style: italic; font-size: 13px; }
+.transcript-text { color: var(--text-muted); }
+.response-text { color: var(--text-main); font-weight: 600; }
 
 /* ============================================================================
-   Footer Section
+   Footer & Red Hover Button
    ============================================================================ */
 .footer {
-  margin-top: auto;
-  padding: var(--spacing-md);
-  background: var(--white);
-  border-top: 1px solid var(--gray-200);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  padding: 0 20px 20px;
+  z-index: 1;
 }
 
 .clear-button {
   width: 100%;
-  padding: var(--spacing-md);
-  background: var(--white);
-  border: 2px solid var(--gray-300);
-  border-radius: var(--radius-md);
-  color: var(--gray-700);
-  font-size: 14px;
+  padding: 12px;
+  background: var(--surface-glass);
+  border: var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
-  transition: all var(--transition-normal);
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
 
+/* RED HOVER EFFECT */
 .clear-button:hover {
-  background: var(--gray-50);
-  border-color: var(--gray-400);
-  color: var(--gray-800);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background: #fef2f2; /* Very pale red */
+  border-color: #fca5a5;
+  color: var(--delete-red);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
 }
 
-.clear-button:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-.button-icon {
-  width: 18px;
-  height: 18px;
-  stroke-width: 2.5;
-  flex-shrink: 0;
-}
-
-/* ============================================================================
-   Utility Classes
-   ============================================================================ */
-
-/* Hidden Class */
-.hidden {
-  display: none !important;
-}
-
-/* Loading Animation */
-.loading {
-  position: relative;
-  color: transparent;
-}
-
-.loading::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid var(--purple-light);
-  border-top-color: var(--purple-primary);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Error State */
-.error {
-  color: var(--error-red) !important;
-  border-color: var(--error-red) !important;
-}
-
-/* Success State */
-.success {
-  color: var(--success-green) !important;
-  border-color: var(--success-green) !important;
-}
-
-/* Text Classes */
-.transcript-text,
-.response-text {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-/* Error Message Styling */
-.error-message {
-  padding: var(--spacing-sm);
-}
-
-.error-message p {
-  margin: 0;
-}
-
-.error-message p + p {
-  margin-top: var(--spacing-sm);
-}
-
-/* ============================================================================
-   Accessibility Enhancements
-   ============================================================================ */
-button:focus-visible {
-  outline: 3px solid var(--purple-light);
-  outline-offset: 2px;
-}
-
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ============================================================================
-   Chrome Extension Specific Fixes
-   ============================================================================ */
-
-/* Prevent any flex shrinking issues */
-.header,
-.mic-control,
-.status-section,
-.transcript-section,
-.response-section,
-.footer {
-  width: 100%;
-}
-
-/* Ensure proper rendering in popup */
-body > * {
-  max-width: 100%;
-}
+.button-icon { width: 14px; height: 14px; stroke-width: 2.5px; }
+.hidden { display: none !important; }
